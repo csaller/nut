@@ -1,6 +1,6 @@
 import time
 import os.path
-from watchdog.observers import Observer
+from watchdog.observers.polling import PollingObserver
 from watchdog.events import RegexMatchingEventHandler
 from nut import Nsps
 from nut import Config
@@ -12,6 +12,14 @@ class FileEventHandler(RegexMatchingEventHandler):
 	def on_created(self, event):
 		print('added: ' + event.src_path)
 		Nsps.registerFile(event.src_path)
+
+	# A file that is still being copied fires created before the copy finishes,
+	# so refresh the size recorded at registration on every write.
+	def on_modified(self, event):
+		nsp = Nsps.files.get(os.path.abspath(event.src_path))
+		if nsp:
+			nsp.fileSize = None
+			nsp.getFileSize()
 
 	def on_deleted(self, event):
 		print('deleted: ' + event.src_path)
@@ -28,7 +36,9 @@ class Watcher:
 	def __init__(self, src_path):
 		self.__src_path = src_path
 		self.__event_handler = FileEventHandler()
-		self.__event_observer = Observer()
+		# Poll instead of using inotify, which misses changes made by other
+		# hosts on network mounts such as NFS.
+		self.__event_observer = PollingObserver(timeout=30)
 
 	def run(self):
 		self.start()
