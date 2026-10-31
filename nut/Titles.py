@@ -56,6 +56,16 @@ def data(region=None, language=None):
 		load()
 	return titles
 
+# Yields (region, language, data) for each pair, unloading dbs that were not
+# already cached. A parsed region db takes ~400MB, so keeping every region
+# loaded at once runs out of memory. Only use for read-only passes.
+def iterRegions(regionLanguages):
+	for region, language in regionLanguages:
+		cached = language in regionTitles.get(region, {})
+		yield region, language, data(region, language)
+		if not cached:
+			regionTitles[region].pop(language, None)
+
 def items(region=None, language=None):
 	if region:
 		return regionTitles[region][language].items()

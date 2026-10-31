@@ -495,25 +495,23 @@ def decompressAll():
 	s.close()
 
 def refreshRegions(save=True):
-	for region in Config.regionLanguages():
-		for language in Config.regionLanguages()[region]:
-			for i in Titles.data(region, language):
-				regionTitle = Titles.data(region, language)[i]
+	pairs = [(region, language) for region, languages in Config.regionLanguages().items() for language in languages]
+	for region, language, data in Titles.iterRegions(pairs):
+		for regionTitle in data.values():
+			if regionTitle.id:
+				title = Titles.get(regionTitle.id, None, None)
 
-				if regionTitle.id:
-					title = Titles.get(regionTitle.id, None, None)
+				if not hasattr(title, 'regions') or not title.regions:
+					title.regions = []
 
-					if not hasattr(title, 'regions') or not title.regions:
-						title.regions = []
+				if not hasattr(title, 'languages') or not title.languages:
+					title.languages = []
 
-					if not hasattr(title, 'languages') or not title.languages:
-						title.languages = []
+				if region not in title.regions:
+					title.regions.append(region)
 
-					if region not in title.regions:
-						title.regions.append(region)
-
-					if language not in title.languages:
-						title.languages.append(language)
+				if language not in title.languages:
+					title.languages.append(language)
 	if save:
 		Titles.save()
 
@@ -529,8 +527,8 @@ def importRegion(region='US', language='en', save=True):
 		for language2 in Config.regionLanguages()[region2]:
 			regionLanguages.append(RegionLanguage(region2, language2, region, language))
 
-	for rl in sorted(regionLanguages):
-		data = Titles.data(rl.region, rl.language)
+	pairs = [(rl.region, rl.language) for rl in sorted(regionLanguages)]
+	for region2, language2, data in Titles.iterRegions(pairs):
 		for nsuId in sorted(data.keys(), reverse=True):
 			regionTitle = data[nsuId]
 			if not regionTitle.id:
@@ -539,10 +537,10 @@ def importRegion(region='US', language='en', save=True):
 			try:
 				for tid in regionTitle.ids:
 					title = Titles.get(tid, None, None)
-					title.importFrom(regionTitle, rl.region, rl.language, preferredRegion=region, preferredLanguage=language)
+					title.importFrom(regionTitle, region2, language2, preferredRegion=region, preferredLanguage=language)
 			except:
 				title = Titles.get(regionTitle.id, None, None)
-				title.importFrom(regionTitle, rl.region, rl.language, preferredRegion=region, preferredLanguage=language)
+				title.importFrom(regionTitle, region2, language2, preferredRegion=region, preferredLanguage=language)
 
 	Titles.loadTxtDatabases()
 	Hook.call("import.post", region, language)
