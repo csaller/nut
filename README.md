@@ -104,9 +104,17 @@ PYCURL_SSL_LIBRARY=openssl LDFLAGS="-L/usr/local/opt/openssl/lib" CPPFLAGS="-I/u
 ### Docker
 
 ```console
-$ docker build --tag nut https://github.com/blawar/nut.git
+$ docker build --tag nut https://github.com/blawar/nut.git  # or `docker build --tag nut .` from a clone
 $ docker run --rm -it --network=host --env=DISPLAY --volume=/tmp/.X11-unix:/tmp/.X11-unix --volume="$PWD:$PWD" --workdir="$PWD" --user=$(id -u):$(id -g) nut
 ```
+
+The GUI needs an X11 server on the host. Without one (macOS without XQuartz, for example), run only the server and open `http://localhost:9000`:
+
+```console
+$ docker run --rm -it -p 9000:9000 --volume="$PWD:$PWD" --workdir="$PWD" --user=$(id -u):$(id -g) nut python3 /app/nut.py -S
+```
+
+The first start downloads the title database and needs about 1GB of RAM.
 
 ------
 

@@ -10,6 +10,7 @@ google-auth-oauthlib~=0.4.6
 pycryptodome~=3.14.1
 pycryptoplus~=0.0.1
 pyopenssl~=22.0.0
+cryptography~=38.0  # pyopenssl 22 breaks on cryptography 39+
 Flask~=2.0.3
 Pillow~=10.4.0
 zstandard==0.15.2
