@@ -3,7 +3,7 @@ name: Image
 # Builds the Docker image and pushes it to ghcr.io/<owner>/nut.
 on:
   push:
-    branches: [homelab]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
